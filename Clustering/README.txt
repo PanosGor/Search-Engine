@@ -6,16 +6,16 @@ and in the 2nd line for SVD.py
 
 CLustering.py is an attempt to cluster the documents and label them with relevant keywords
 
-SVD.py is our search engine and the query fetches most relevant documents after clustering
+SVD.py is the search engine and the query fetches most relevant documents after clustering
 
 
 Files: 
 
 english_dictionary.json and group_words.json are used for the spell checking we have
 
-sample_100_without_duplicates.json is our dataset without duplicates
+sample_100_without_duplicates.json is the dataset without duplicates
 
-vector csv is a big matrix with tf-idf values, instead of trying to build the matrix in the SVD file we made it once and we load it from the .csv 
+vector csv is a big matrix with tf-idf values, instead of trying to build the matrix in the SVD file we made it once and loads it from the .csv 
 in order to make the program faster
 
-Num_dic_data.json is every document we have with and id in order to find the most relevant document after the SVD
+Num_dic_data.json is every document in the dataset and id in order to find the most relevant document after the SVD
