@@ -4,7 +4,7 @@ To do that, change the path in the 11th line of the code with the command os.chd
 
 Files: 
 
-english_dictionary.json and group_words.json are used for the spell checking we have
+english_dictionary.json and group_words.json are used for the spell checking 
 
 sample_100_without_duplicates.json is our dataset without duplicates
 
