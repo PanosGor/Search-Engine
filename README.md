@@ -39,8 +39,96 @@ More specifically first we downloaded all the English Vocabulary from the nltk l
 
 The idea was that after the user inputs his Query and after processing the query (removing stopwords, non-words, stemming) each remaining word would be passed 
 through a function that checks if it is a word or not if the word exists in the English vocabulary, then no further actions required, and the next word of the querywould be checked. 
-To accomplish that by avoiding iterating through the whole vocabulary we created a dictionary were the key and the value for each word was the word itself (d={“table”:”table”}). 
+To accomplish that by avoiding iterating through the whole vocabulary I created a dictionary were the key and the value for each word was the word itself (d={“table”:”table”}). 
 Every time a word from the query was to be checked if it exists in the vocabulary, the word was put in the dictionary d, d[“table”]. 
 By using try and except method if no error was occurring then the word existed in the vocabulary. Otherwise, (except) the Levenhstein distance between the 
 Query word and all the words that have same length (-1,+1) and start with the same letter was calculated. 
+
+A dictionary was created were all the keys were all the possible lengths in the English Voc. (1-24) and the values were lists with all the words having this length 
+(2=[of,on,in,to e.t.c]). 
+Then a new list was created by extending the lists that had the same length as the Query_word plus the lists with -1 and +1 lengths.
+From that new list the Levenhstein distance was calculated for only the words starting with the same letter as the query word. 
+That helped to narrow down the words from 245.638 to a couple of thousands minimizing that way the amount of Levenhstein distances that needed to be calculated. 
+After the last step only the words with the minimum distance are presented to the user. 
+If there is only one word, then it is substituted automatically in the query otherwise the user can choose from a list of recommendations and can even choose to leave the word as is. 
+Because of the unique topics of that are discussed in Stack Overflow many of the words do not exist in the English voc (Java, SQL e.t.c). 
+To solve this issue, a Python set was created of all the words in the corpus and passed each word from the autocorrect algorithm above to correct any typos for each word. 
+Then I added all the non-existing words in the initial English vocabulary extra 8902 words related to Computer Science topics.
+
+## Query Expansion
+
+The idea here is that I wanted to expand the query so that it gives back results that are semantically related to the query. 
+In order to achieve that I needed to use word embeddings with the help of Word2Vec. 
+The vocabulary of the dataset revolves a lot around computer science terminology so I had to train Word2Vec so that it can “understand” the semantic meaning of the words. 
+
+
+The way the model was trained, is that after the pre-processed phase the text from the data was created sentences and fed them to the model with k=5 positions away from each center word. 
+Naturally Word2Vec considers all words of a sentence as center words so it creates relations between them by representing each word and context as n dimensional vectors. 
+One problem I faced in the process of training the model is that our dataset was too small for the model to be effective but I managed to fix that by making the model read our data more than 30 times. 
+In the pictures bellow you can see that for words like “python” or “panda” the relevant terms are not snakes or other kinds of bears.
+
+The way that the query was expanded is that for each word that there is in the query I find relevant words from the model and build a second query in the background and match the second query with the tf-idf vectors.
+I also tried to make a query sentence autocomplete using again Word2VVec but for this task we trained the model with phrases(bigrams) from our total vocabulary. 
+In the next pictures you can see some results for the same words (“python”, ”pandas”) as before.
+
+## Clustering
+
+In order to further improve the effectiveness of the information retrieval system created so far, clustering was applied on the unlabeled data. 
+The decision for applying clustering in the initial data was based on the need to cut down computational expense. 
+Before clustering the data, a cosine similarity was applied between the query and all the documents. 
+This means that there were 3124 computations taking place before the user got his answers. 
+After the clustering, the query should take part in cosine similarity computations only with the documents belonging to the cluster that fits best. \
+Another goal is to improve the performance of the model in the sense that retrieved documents with lower relevance level would still have a value to the user asking the query.
+The method used to create the clusters is K-Means. 
+A major challenge in the current dataset was the humongous vectors that represented documents. 
+Basically, every word of the vocabulary was a dimension in the space the vectors exist in. 
+So, there were 3124 documents represented on a vector space of 12960 dimensions (length of the corpus). 
+In order to battle the so-called “Curse of dimensionality”, Singular Value Decomposition method was applied. 
+This method was preferred because of how sparse the initial matrix of documents was. 
+The dimensions of vectors were reduced to 100. This decision was made on the basis that the vectors needed to become small enough to be manageable in the expense of minimum information loss.
+Before clustering the data, it was crucial to identify the optimal number of clusters needed to be created. 
+This decision was based on a combination of metrics. First, the residual sum of squares was computed for and then it was plotted with the possible number of clusters to be created. The diagram that occurred is the following:
+
+*Diagram 1: Residual sum of squares – Number of Clusters*
+
+![image](https://user-images.githubusercontent.com/82097084/166110566-7e3f2208-54a2-4780-8dbc-cdbaf642182f.png)
+
+Then, another metric named silhouette coefficients was computed and plotted with the possible number of clusters. 
+The silhouette coefficient indicates the goodness of the clustering technique and it takes values between -1 and 1. 
+The closer this value is to one the more clearly distinguished and well apart from each other the clusters are. 
+From plotting the result was the following:
+
+*Diagram 2: Silhouette coefficients – Number of Clusters*
+
+![image](https://user-images.githubusercontent.com/82097084/166110585-9ce940c5-0249-42c5-8013-45f0e19e84ab.png)
+
+Based on those diagrams the decision that three (3) is the optimum number of clusters was made.
+To support this choice, a programmatical method was also used. 
+The python kneed package was used and especially its function called KneeLocator. The result was the same. 
+
+Finally, the clusters were created. The clusters were visualized with three different methods: SVD, PCA, TSNE. The two-dimensional visualizations are the following:
+
+*Diagram 3: Cluster and Centroids (black points) 2-D visualization with SVD*
+
+![image](https://user-images.githubusercontent.com/82097084/166110611-22566e2d-e282-4c3f-899a-cb84a45932f1.png)
+
+*Diagram 4: Cluster 2-D visualization with PCA*
+
+![image](https://user-images.githubusercontent.com/82097084/166110723-c1222cf8-0130-4a75-a8eb-5060c4132e18.png)
+
+*Diagram 5: Cluster 2-D visualization with TSNE*
+
+![image](https://user-images.githubusercontent.com/82097084/166110740-75f61992-7c74-4954-8918-9acb09e04eb6.png)
+
+
+The initial documents used as the search base of the engine are unlabeled, meaning that the clusters are created upon mathematical measures such as distance of points
+from the centers of the clusters, so there is no practical visualization about what is the ‘subject’ for each one. 
+To ease this problem, some ‘key’ words were produced for each one. 
+The results are presented in the following table:
+
+|Clusters|Keywords|
+|----------|----------|
+|**Cluster 0**|	string, values, object, like, column, value, list, array, table, data|
+|**Cluster 1**| image, trying, want, app, like, use, using, file, code, error|
+|**Cluster 2**| overflow, update, editing, post, want, hours, improve, ago, question, closed|
 
