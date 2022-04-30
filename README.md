@@ -126,9 +126,48 @@ from the centers of the clusters, so there is no practical visualization about w
 To ease this problem, some ‘key’ words were produced for each one. 
 The results are presented in the following table:
 
-|Clusters|Keywords|
+*Table 1: Keywords produced for each cluster*
+
+|**Clusters**|Keywords|
 |----------|----------|
 |**Cluster 0**|	string, values, object, like, column, value, list, array, table, data|
 |**Cluster 1**| image, trying, want, app, like, use, using, file, code, error|
 |**Cluster 2**| overflow, update, editing, post, want, hours, improve, ago, question, closed|
+
+The words seem to have some cohesion between them, so some assumptions about the thremmatology of each of them can be made. 
+As a second step, the query given by the user should be matched with the correct cluster. Here a major problem arose. 
+The length of the query is random and probably small, but the vectors of the space created are of 100 dimensions. 
+To get over this, from the initial frame of docs-words about 300 were randomly chosen and added to a data frame that also included the query. 
+The goal of this process was to create a query vector that did have the same length with the other vectors (documents) but also with the centroids of the clusters. 
+Then, Singular Value Decomposition was applied in this frame and the length of the vectors was reduced to 100 once again.
+To identify in which cluster the query belongs to, the cosine similarity formula between the query vector and the centroid vectors is applied. 
+The largest value of this metric, reveals in which centroid the query is closer to, thus concluding that the correct cluster the one with the specific center.
+
+## BERT
+
+As an alternative way to vectorize the documents in the Corpus as well as the Query, BERT model (“bert-base-nli-mean-tokens”) was also used from Sentence Transformers library. 
+In order to save computational time after using BERT to vectorize all the documents in the Corpus once and then we saved the equivalent vectors for each document in a dictionary. 
+Then the dictionary was saved locally as a json file and it is loaded in the program at the initial steps once every time we instigate our program. 
+BERT was also used in order to vectorize the Query.  
+A problem that was encountered was that after calculating cosine similarities for the most similar documents to the Query the most similar documents fetched were not accurate.
+For example after copy and pasting a title for one of the Questions from our data:
+
+*Query: Python labelling new data points in a histogram.*
+
+Top 3 BERT Result Titles: 
+-	“How do I traverse implicit code in RecursiveASTVisitor”
+-	“How to resolve invalid package name error in npm”
+-	“Angular Webpack can be used to load scripts dynamically”
+
+Top 3 Results by using TF-IDF method:
+-	“Python labelling new data points in a histogram”
+-	“Having labels instead of number on axes”
+-	“How to generate a 'label' using a json file in app configuration service?”
+
+From the results above it is clear that TF-IDF vectorizing method was performing better than BERT.
+The reason behind this is most likely the fact that BERT was not trained to recognize Computer Science topics.
+
+A better approach would be to fine tune BERT  model to the Stack Overflow Dataset.
+
+
 
